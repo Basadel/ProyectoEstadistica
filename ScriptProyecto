@@ -1,0 +1,217 @@
+# =========================================================
+# INSTALAR Y CARGAR LIBRERIAS
+# =========================================================
+
+install.packages("dplyr")
+install.packages("ggplot2")
+
+library(dplyr)
+library(ggplot2)
+
+# =========================================================
+# CARGAR BASE DE DATOS
+# =========================================================
+
+base <- read.csv("BASEDATOS1.csv")
+
+# Seleccionar registros del 40002 al 50000
+datos <- base[40002:50000, ]
+
+# Verificar
+head(datos)
+dim(datos)
+
+# =========================================================
+# SELECCION DE VARIABLES
+# =========================================================
+
+variables <- datos %>%
+  select(Daily_Phone_Hours,
+         Sleep_Hours,
+         Stress_Level,
+         Social_Media_Hours,
+         Work_Productivity_Score)
+
+# =========================================================
+# TABLAS DE FRECUENCIA
+# =========================================================
+
+# Daily Phone Hours
+freq_phone <- table(cut(datos$Daily_Phone_Hours, breaks = 5))
+freq_phone
+prop.table(freq_phone) * 100
+
+# Sleep Hours
+freq_sleep <- table(cut(datos$Sleep_Hours, breaks = 5))
+freq_sleep
+prop.table(freq_sleep) * 100
+
+# Stress Level
+freq_stress <- table(cut(datos$Stress_Level, breaks = 5))
+freq_stress
+prop.table(freq_stress) * 100
+
+# Social Media Hours
+freq_social <- table(cut(datos$Social_Media_Hours, breaks = 5))
+freq_social
+prop.table(freq_social) * 100
+
+# Work Productivity Score
+freq_productivity <- table(cut(datos$Work_Productivity_Score, breaks = 5))
+freq_productivity
+prop.table(freq_productivity) * 100
+
+# =========================================================
+# ESTADISTICOS DESCRIPTIVOS
+# =========================================================
+
+summary_stats <- datos %>% 
+  select(Daily_Phone_Hours,
+         Sleep_Hours,
+         Stress_Level,
+         Social_Media_Hours,
+         Work_Productivity_Score) %>%
+  summary()
+
+print(summary_stats)
+
+# Desviación estándar
+sd_sueno <- sd(datos$Sleep_Hours)
+sd_telefono <- sd(datos$Daily_Phone_Hours)
+sd_estres <- sd(datos$Stress_Level)
+sd_social <- sd(datos$Social_Media_Hours)
+sd_productividad <- sd(datos$Work_Productivity_Score)
+
+cat("Desviación Estándar Sueño:", sd_sueno, "\n")
+cat("Desviación Estándar Teléfono:", sd_telefono, "\n")
+cat("Desviación Estándar Estrés:", sd_estres, "\n")
+cat("Desviación Estándar Redes Sociales:", sd_social, "\n")
+cat("Desviación Estándar Productividad:", sd_productividad, "\n")
+
+# =========================================================
+# HISTOGRAMAS
+# =========================================================
+
+# Horas de sueño
+ggplot(datos, aes(x = Sleep_Hours)) +
+  geom_histogram(aes(y = ..density..),
+                 bins = 15,
+                 fill = "skyblue",
+                 color = "white") +
+  stat_function(fun = dnorm,
+                args = list(mean = mean(datos$Sleep_Hours),
+                            sd = sd(datos$Sleep_Hours)),
+                color = "darkblue",
+                linewidth = 1) +
+  labs(title = "Distribución de Horas de Sueño",
+       x = "Horas de Sueño",
+       y = "Densidad") +
+  theme_minimal()
+
+# Uso del teléfono
+ggplot(datos, aes(x = Daily_Phone_Hours)) +
+  geom_histogram(fill = "orange",
+                 bins = 15,
+                 color = "white") +
+  labs(title = "Distribución del Uso Diario del Teléfono",
+       x = "Horas",
+       y = "Frecuencia") +
+  theme_minimal()
+
+# Estrés
+ggplot(datos, aes(x = Stress_Level)) +
+  geom_histogram(fill = "red",
+                 bins = 10,
+                 color = "white") +
+  labs(title = "Distribución del Nivel de Estrés",
+       x = "Nivel de Estrés",
+       y = "Frecuencia") +
+  theme_minimal()
+
+# =========================================================
+# GRAFICOS DE DISPERSION
+# =========================================================
+
+# Teléfono vs sueño
+ggplot(datos, aes(x = Daily_Phone_Hours,
+                  y = Sleep_Hours)) +
+  geom_jitter(alpha = 0.3,
+              color = "tomato") +
+  geom_smooth(method = "lm",
+              color = "black") +
+  labs(title = "Uso del Teléfono vs Horas de Sueño",
+       x = "Horas de teléfono",
+       y = "Horas de sueño") +
+  theme_minimal()
+
+# Redes sociales vs estrés
+ggplot(datos, aes(x = Social_Media_Hours,
+                  y = Stress_Level)) +
+  geom_point(alpha = 0.3,
+             color = "purple") +
+  geom_smooth(method = "lm",
+              color = "black") +
+  labs(title = "Redes Sociales vs Estrés",
+       x = "Horas en redes sociales",
+       y = "Nivel de estrés") +
+  theme_minimal()
+
+# =========================================================
+# BOXPLOTS
+# =========================================================
+
+# Estrés por ocupación
+ggplot(datos, aes(x = Occupation,
+                  y = Stress_Level,
+                  fill = Occupation)) +
+  geom_boxplot() +
+  labs(title = "Estrés según Ocupación",
+       x = "Ocupación",
+       y = "Nivel de Estrés") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Sueño
+ggplot(datos, aes(y = Sleep_Hours)) +
+  geom_boxplot(fill = "lightgreen") +
+  labs(title = "Boxplot Horas de Sueño",
+       y = "Horas de Sueño") +
+  theme_minimal()
+
+# =========================================================
+# CORRELACIONES
+# =========================================================
+
+cor_telefono_estres <- cor(datos$Daily_Phone_Hours,
+                           datos$Stress_Level)
+
+cor_sueno_estres <- cor(datos$Sleep_Hours,
+                        datos$Stress_Level)
+
+cor_social_estres <- cor(datos$Social_Media_Hours,
+                         datos$Stress_Level)
+
+cat("Correlación Teléfono - Estrés:",
+    cor_telefono_estres, "\n")
+
+cat("Correlación Sueño - Estrés:",
+    cor_sueno_estres, "\n")
+
+cat("Correlación Redes Sociales - Estrés:",
+    cor_social_estres, "\n")
+
+# =========================================================
+# VALORES ATIPICOS
+# =========================================================
+
+boxplot.stats(datos$Daily_Phone_Hours)$out
+boxplot.stats(datos$Sleep_Hours)$out
+boxplot.stats(datos$Stress_Level)$out
+
+# =========================================================
+# GUARDAR RESULTADOS
+# =========================================================
+
+write.csv(datos,
+          "analisis_final.csv",
+          row.names = FALSE)
